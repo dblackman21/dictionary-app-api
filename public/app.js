@@ -14,20 +14,22 @@ form.addEventListener('submit', async (e) => {
     }
 
     resultsContainer.innerHTML = '<p class="loading-message">Searching...</p>';
+    console.log('Fetching data for word:', word);
 
     try {
-        const response = await fetch('${API_URL_BASE}${word}');
+        const response = await fetch(`${API_URL_BASE}${word}`);
 
         if (!response.ok) {
             const errorData = await response.json();
             const errorMessage = errorData.title || 'Word not found. Check your spelling and try again.';
-            resultsContainer.innerHTML = '<p class="error">${errorMessage}</p>';
+            resultsContainer.innerHTML = `<p class="error">${errorMessage}</p>`;
             return;
         }
 
         const data = await response.json();
         const wordData = data[0];
 
+        renderResults(wordData);
     } catch (error) {
         console.error('Error fetching data:', error);
         resultsContainer.innerHTML = '<p class="error">A network error occurred. Please try again later.</p>';
@@ -35,21 +37,23 @@ form.addEventListener('submit', async (e) => {
 });
 
 function renderResults(data){
-    let html = '<h2 class="word-title">${data.word}</h2>';
+    let html = `<h2 class="word-title">${data.word}</h2>`;
 
     const phonetics = data.phonetics.find(p => p.text) || data.phonetics[0] || {};
-    if (phonetics) {
-        html += '<p class="phonetics">Phonetics: ${phonetics.text}</p>';
+    if (phonetics.text) {
+        html += `<p class="phonetics">Phonetics: ${phonetics.text}</p>`;
     }
 
     data.meanings.forEach(meaning => {
-        html += '<div class="meaning-section">'
-        html += '<h3 class="part-of-speech">${meaning.partOfSpeech}</h3>';
-        html += '<ol class="definitions-list">';
+        html += `
+            <div class="meaning-section">
+                <h3 class="part-of-speech">${meaning.partOfSpeech}</h3>
+                <ol class="definitions-list">
+            `;
 
         meaning.definitions.forEach((def, index) => {
-            if (index > 3) {
-                html += '<li>${def.definition}</li>';
+            if (index < 3) {
+                html += `<li>${def.definition}</li>`;
             }
         });
 
